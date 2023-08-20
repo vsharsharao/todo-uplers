@@ -1,0 +1,40 @@
+stages: 
+	- fetch-key 
+	- build 
+	- push
+	- deploy
+
+variables: 
+	KEYVAULT_NAME : todo-kv 
+	ACR_NAME : azcontainerregistryrprivate.azurecr.io 
+	SERVER_IMAGE : $ACR_NAME/todo-server 
+	RESOURCE_GROUP: az_rg
+	WEB_APP_NAME: todo-server 
+	APP_SERVICE_PLAN: apps-free-tier
+
+fetch_key: 
+	stage: fetch-key 
+	image: mcr.microsoft.com/azure-cli 
+	script: 
+		- az login --service-principal --username $USER_ID --password $USER_SECRET --tenant $TENANT_ID 
+		- ACR_USERNAME=$(az keyvault secret show --vault-name $KEYVAULT_NAME --name ACR-USERNAME --query value -o tsv) 
+		- ACR_PASSWORD=$(az keyvault secret show --vault-name $KEYVAULT_NAME --name ACR-PASSWORD --query value -o tsv)
+
+build_image: 
+	stage: build 
+	script: 
+		- docker build -t todo-server ./todo.server/
+		- docker tag pbiembedded-server $SERVER_IMAGE
+
+push_to_acr: 
+	stage: push 
+	script: 
+		- docker login $ACR_NAME -u=$CLIENT_ID -p=$CLIENT_SECRET 
+		- docker push $SERVER_IMAGE
+
+deploy: 
+	stage: deploy 
+	image: mcr.microsoft.com/azure-cli 
+	script: 
+		- az login --service-principal --username $USER_ID --password $USER_SECRET --tenant $TENANT_ID 
+		- az webapp config container set --resource-group $RESOURCE_GROUP --name $WEB_APP_NAME --docker-custom-image-name $SERVER_IMAGE
