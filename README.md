@@ -27,7 +27,7 @@
 	The application is configure to run with sqlite locally. However the configuration can be changed to use SQL server in development or production environemt. Use the connection string with Azure Defaults and Managed Identity enabled in the app service.
 	EF core is used with code first approach. There are 2 contexts created, one for localhost and dev/stage/prod. 
 
-## Design patters
+## Design patterns
 	As the task is predominantly a CRUD operation, I've used Repository & Unit of work patterns. Built-in Depenedncy Injection pattern is used  for writing a loosely coupled code.
 
 ## Deployment
